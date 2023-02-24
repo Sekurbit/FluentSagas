@@ -111,18 +111,16 @@ public class FluentSagaConditionStepBuilder<TInitiatorEvent> : FluentSagaStepBui
 
     public FluentSagaConditionStepBuilder<TInitiatorEvent> Execute<THandler>() where THandler : IFluentCommand
     {
-        throw new NotImplementedException();
-        
         // Create saga step
-        /*var executeFunc = (Func<object, Task>) ((e) =>
+        var executeFunc = (Func<IFluentEvent, Task<bool>>) ((e) =>
         {
-            if (!(e is TInitiatorEvent evt)) return Task.CompletedTask;
-            return execute(evt);
+            var instance = Activator.CreateInstance<THandler>();
+            return instance.ExecuteAsync(e);
         });
 
         var executeStep = new FluentExecuteSagaStep(executeFunc);
-        SagaBuilder.AddStep(executeStep);*/
-        
+        SagaBuilder.AddStep(executeStep);
+
         return this;
     }
     

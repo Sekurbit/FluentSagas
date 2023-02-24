@@ -8,5 +8,5 @@ public interface IFluentCommand
     /// <param name="event"></param>
     /// <typeparam name="TEvent"></typeparam>
     /// <returns></returns>
-    Task ExecuteAsync<TEvent>(TEvent @event) where TEvent : IFluentEvent;
+    Task<bool> ExecuteAsync<TEvent>(TEvent @event) where TEvent : IFluentEvent;
 }
