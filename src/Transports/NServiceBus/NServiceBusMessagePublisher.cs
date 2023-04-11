@@ -18,12 +18,14 @@ public class NServiceBusMessagePublisher : IFluentMessagePublisher
     {
         // NServiceBus saga specific options needed so that we can follow this as a saga in Service Insight
         var options = new PublishOptions();
+        options.SetHeader("NServiceBus.EnclosedMessageTypes", typeof(TMessage).Name);
+        
         options.SetHeader("NServiceBus.OriginatingSagaId", sagaId);
         options.SetHeader("NServiceBus.OriginatingSagaType", sagaType.AssemblyQualifiedName);
 
         options.SetMessageId(message.Id);
         options.SetHeader("NServiceBus.CorrelationId", message.CorrelationId);
-        
+
         _logger.LogDebug($"Publishing {message.GetType()} for correlation ID '{message.CorrelationId}'");
 
         await _messageSession.Publish(message, options);

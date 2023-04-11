@@ -6,7 +6,14 @@ using SagaTest;
 
 namespace FluentSaga;
 
-public class FluentSagaRouter
+public interface IFluentSagaRouter
+{
+    Task InitializeAsync();
+
+    Task ExecuteAsync(Abstractions.IFluentEvent @event);
+}
+
+public class FluentSagaRouter : IFluentSagaRouter
 {
     private readonly FluentSaga? _sagaToRun;
     private readonly ILogger<FluentSagaRouter> _logger;

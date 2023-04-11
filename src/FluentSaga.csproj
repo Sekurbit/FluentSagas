@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>0.0.2</Version>
+        <Version>0.0.4</Version>
         <Title>FluentSaga</Title>
         <Authors>Sekurbit Sverige AB</Authors>
         <Description>Beautiful and easy to read implementation of saga pattern</Description>
@@ -19,6 +19,16 @@
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
       <PackageReference Include="NServiceBus" Version="8.0.3" />
+    </ItemGroup>
+
+    <PropertyGroup>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\LICENSE.md" Pack="true" PackagePath="" />
+        <None Include="..\README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
 </Project>
