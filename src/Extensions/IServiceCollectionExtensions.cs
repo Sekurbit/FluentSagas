@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddFluentSagas(this IServiceCollection services, Action<FluentSagasOptionsBuilder> options)
     {
-        services.AddSingleton<FluentSagaRouter>();
+        services.AddSingleton<IFluentSagaRouter, FluentSagaRouter>();
 
         var optionsBuilder = new FluentSagasOptionsBuilder(services);
         options(optionsBuilder);
