@@ -9,7 +9,7 @@ public static class ApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseFluentSagas(this IApplicationBuilder app)
     {
-        var router = app.ApplicationServices.GetService<FluentSagaRouter>();
+        var router = app.ApplicationServices.GetService<IFluentSagaRouter>();
 
         if (router == null)
             throw new InvalidOperationException("builder.Services.AddFluentSagas() needs to be called before this.");
@@ -27,7 +27,7 @@ public static class ApplicationBuilderExtensions
     
     public static IHost UseFluentSagas(this IHost host)
     {
-        var router = (FluentSagaRouter)host.Services.GetService(typeof(FluentSagaRouter))!;
+        var router = (IFluentSagaRouter)host.Services.GetService(typeof(IFluentSagaRouter))!;
 
         if (router == null)
             throw new InvalidOperationException("builder.Services.AddFluentSagas() needs to be called before this.");
