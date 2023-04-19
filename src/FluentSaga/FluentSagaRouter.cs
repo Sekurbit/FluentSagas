@@ -85,6 +85,9 @@ public class FluentSagaRouter : IFluentSagaRouter
 
     public async Task ExecuteAsync(Abstractions.IFluentEvent @event)
     {
+        if (!_eventToSagaMapper.Any())
+            await InitializeAsync();
+
         var sagaTasks = new List<Task>();
         
         var timer = new Stopwatch();

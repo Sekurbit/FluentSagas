@@ -10,11 +10,11 @@ namespace FluentSaga.Transports.NServiceBus;
 /// <typeparam name="Event"></typeparam>
 public class NServiceBusMessageHandler : IHandleMessages<FluentEvent>
 {
-    private readonly FluentSagaRouter _sagaRouter;
+    private readonly IFluentSagaRouter _sagaRouter;
     private readonly IFluentCorrelationStore _correlationStore;
     private readonly ILogger<NServiceBusMessageHandler> _logger;
 
-    public NServiceBusMessageHandler(FluentSagaRouter sagaRouter, IFluentCorrelationStore correlationStore, ILogger<NServiceBusMessageHandler> logger)
+    public NServiceBusMessageHandler(IFluentSagaRouter sagaRouter, IFluentCorrelationStore correlationStore, ILogger<NServiceBusMessageHandler> logger)
     {
         _sagaRouter = sagaRouter;
         _correlationStore = correlationStore;
