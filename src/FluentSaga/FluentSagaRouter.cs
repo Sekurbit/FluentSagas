@@ -48,7 +48,8 @@ public class FluentSagaRouter : IFluentSagaRouter
 
             foreach (var saga in types)
             {
-                var instance = (global::FluentSaga.FluentSaga) InstanceHelper.Create(_serviceProvider, saga);
+                using var serviceScope = _serviceProvider.CreateScope();
+                var instance = (global::FluentSaga.FluentSaga) InstanceHelper.Create(serviceScope.ServiceProvider, saga);
                 InitializeSagaInstance(instance);
 
                 foreach (var entryType in instance.EntryEventTypes)
