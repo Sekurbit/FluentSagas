@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using FluentSaga.Abstractions;
 using FluentSaga.State;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SagaTest;
 
@@ -104,7 +105,8 @@ public class FluentSagaRouter : IFluentSagaRouter
             
             foreach (var saga in sagas)
             {
-                var instance = (global::FluentSaga.FluentSaga)InstanceHelper.Create(_serviceProvider, saga);
+                using var serviceScope = _serviceProvider.CreateScope();
+                var instance = (global::FluentSaga.FluentSaga)InstanceHelper.Create(serviceScope.ServiceProvider, saga);
                 await ExecuteSingleSaga(@event, instance, saga, sagaTasks);
             }
         }
