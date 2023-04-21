@@ -151,6 +151,18 @@ public class FluentSagaConditionStepBuilder<TInitiatorEvent> : FluentSagaStepBui
         return SagaBuilder;
     }
 
+    /// <summary>
+    /// Halts the execution of the saga and forces the message to be left on the queue for another retry.
+    /// </summary>
+    /// <param name="message">Message to provide to the exception that will be thrown</param>
+    /// <param name="inner">Inner exception if needed</param>
+    /// <returns>Nothing</returns>
+    /// <exception cref="SagaException">Thrown by executing this function</exception>
+    public FluentSagaBuilder Throw(string message, Exception? inner = null)
+    {
+        throw new SagaException(message, inner);
+    }
+
     public FluentSagaConditionStepBuilder<TInitiatorEvent> Ensure<THandler>(Action<FluentSagaValidationStepBuilder<TInitiatorEvent>> buildStep) where THandler : IFluentPromiseExecutor
     {
         // Create the saga step
