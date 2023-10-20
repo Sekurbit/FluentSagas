@@ -91,7 +91,9 @@ public abstract class FluentSaga
                     if (!exceptionHandler.Equals(default))
                         exceptionHandler.Value(ex);
                     else
+                    {
                         throw;
+                    }
                 }
             }
         }
@@ -119,7 +121,7 @@ public abstract class FluentSaga
     /// notified via logging or explicit handling of exceptions.
     /// </summary>
     public bool IsExceptionsMuted => _isExceptionsMuted;
-    
+
     /// <summary>
     /// Gets the list of types the triggers this saga
     /// </summary>

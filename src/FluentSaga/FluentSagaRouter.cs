@@ -9,7 +9,9 @@ namespace FluentSaga;
 
 public interface IFluentSagaRouter
 {
-    Task InitializeAsync();
+    Task InitializeAsync(IServiceProvider? serviceProvider = null);
+
+    Task ExecuteAsync(Abstractions.IFluentEvent @event, IServiceProvider serviceProvider);
 
     Task ExecuteAsync(Abstractions.IFluentEvent @event);
 }
@@ -26,21 +28,25 @@ public class FluentSagaRouter : IFluentSagaRouter
     {
         _logger = logger;
         _statePersistence = statePersistence;
+        
+        // This cannot be used in runtime since this is not a scoped service provider.
         _serviceProvider = serviceProvider;
     }
 
-    public FluentSagaRouter(global::FluentSaga.FluentSaga saga, ILogger<FluentSagaRouter> logger, IFluentSagaStatePersistence statePersistence)
+    public FluentSagaRouter(FluentSaga saga, ILogger<FluentSagaRouter> logger, IFluentSagaStatePersistence statePersistence)
     {
         _sagaToRun = saga;
         _logger = logger;
         _statePersistence = statePersistence;
     }
 
-    public Task InitializeAsync()
+    public Task InitializeAsync(IServiceProvider? serviceProvider = null)
     {
-        var sagaType = typeof(global::FluentSaga.FluentSaga);
+        var sagaType = typeof(FluentSaga);
         var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(x => !x.IsDynamic);
 
+        var serviceScope = _serviceProvider.CreateScope();
+        
         foreach (var assembly in assemblies)
         {
             var types = assembly.ExportedTypes
@@ -48,9 +54,8 @@ public class FluentSagaRouter : IFluentSagaRouter
 
             foreach (var saga in types)
             {
-                using var serviceScope = _serviceProvider.CreateScope();
-                var instance = (global::FluentSaga.FluentSaga) InstanceHelper.Create(serviceScope.ServiceProvider, saga);
-                InitializeSagaInstance(instance);
+                var instance = (FluentSaga) InstanceHelper.Create(serviceScope.ServiceProvider, saga);
+                InitializeSagaInstance(instance, serviceScope.ServiceProvider);
 
                 foreach (var entryType in instance.EntryEventTypes)
                 {
@@ -75,9 +80,9 @@ public class FluentSagaRouter : IFluentSagaRouter
         return Task.CompletedTask;
     }
 
-    private void InitializeSagaInstance(global::FluentSaga.FluentSaga instance)
+    private void InitializeSagaInstance(FluentSaga instance, IServiceProvider serviceProvider)
     {
-        var builder = new FluentSagaBuilder(_serviceProvider);
+        var builder = new FluentSagaBuilder(serviceProvider);
         
         instance.OnConfigure(builder);
         
@@ -85,7 +90,15 @@ public class FluentSagaRouter : IFluentSagaRouter
             throw new InvalidOperationException("base.OnConfigure(sagaBuilder) must be called at the end of the overridden OnConfigure(...) method.");
     }
 
-    public async Task ExecuteAsync(Abstractions.IFluentEvent @event)
+    public async Task ExecuteAsync(IFluentEvent @event)
+    {
+        using (var scope = _serviceProvider.CreateScope())
+        {
+            await ExecuteAsync(@event, scope.ServiceProvider);
+        }
+    }
+    
+    public async Task ExecuteAsync(IFluentEvent @event, IServiceProvider serviceProvider)
     {
         if (!_eventToSagaMapper.Any())
             await InitializeAsync();
@@ -106,8 +119,7 @@ public class FluentSagaRouter : IFluentSagaRouter
             
             foreach (var saga in sagas)
             {
-                using var serviceScope = _serviceProvider.CreateScope();
-                var instance = (global::FluentSaga.FluentSaga)InstanceHelper.Create(serviceScope.ServiceProvider, saga);
+                var instance = (FluentSaga)InstanceHelper.Create(serviceProvider, saga);
                 await ExecuteSingleSaga(@event, instance, saga, sagaTasks);
             }
         }
@@ -118,9 +130,10 @@ public class FluentSagaRouter : IFluentSagaRouter
         _logger.LogInformation($"Sagas executed in {timer.Elapsed.ToString(@"m\:ss\.fff")}");
     }
 
-    private async Task ExecuteSingleSaga(IFluentEvent @event, global::FluentSaga.FluentSaga instance, Type saga, List<Task> sagaTasks)
+    private async Task ExecuteSingleSaga(IFluentEvent @event, FluentSaga instance, Type saga, List<Task> sagaTasks)
     {
         var stateProperty = instance.GetType().GetProperty("State");
+        var serviceScope = _serviceProvider.CreateScope();
 
         if (!string.IsNullOrEmpty(@event.SagaId))
             instance.Id = @event.SagaId;
@@ -141,7 +154,7 @@ public class FluentSagaRouter : IFluentSagaRouter
             }
         }
 
-        InitializeSagaInstance(instance);
+        InitializeSagaInstance(instance, serviceScope.ServiceProvider);
 
         sagaTasks.Add(Task.Run(async () =>
         {
@@ -181,7 +194,7 @@ public class FluentSagaRouter : IFluentSagaRouter
         }));
     }
 
-    private IFluentSagaState? GetState(global::FluentSaga.FluentSaga instance)
+    private IFluentSagaState? GetState(FluentSaga instance)
     {
         var stateProperty = instance.GetType().GetProperty("State");
         if (stateProperty != null)
@@ -190,7 +203,7 @@ public class FluentSagaRouter : IFluentSagaRouter
         return null;
     }
 
-    private async Task PersistCurrentState(Type saga, global::FluentSaga.FluentSaga instance)
+    private async Task PersistCurrentState(Type saga, FluentSaga instance)
     {
         var stateProperty = saga.GetProperty("State");
         if (stateProperty != null)

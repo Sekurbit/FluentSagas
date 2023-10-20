@@ -2,6 +2,7 @@ using FluentSaga.Abstractions;
 using FluentSaga.State;
 using FluentSaga.Transports;
 using FluentSaga.Transports.NServiceBus;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FluentSaga.Extensions;
@@ -21,6 +22,9 @@ public class FluentSagasOptionsBuilder
         _services.AddTransient<IHandleMessages<FluentEvent>, NServiceBusMessageHandler>();
         _services.AddTransient<IFluentMessagePublisher, NServiceBusMessagePublisher>();
         _services.AddTransient<IFluentCorrelationStore, NServiceBusCorrelationStore>();
+        
+        // Default state persistence
+        _services.AddSingleton<IFluentSagaStatePersistence, MemoryStatePersistence>();
 
         return this;
     }
@@ -28,6 +32,18 @@ public class FluentSagasOptionsBuilder
     public FluentSagasOptionsBuilder UseFileStatePersistence()
     {
         _services.AddSingleton<IFluentSagaStatePersistence, FileStatePersistence>();
+        return this;
+    }
+
+    public FluentSagasOptionsBuilder UseSqlStatePersistence(string connectionString)
+    {
+        _services.AddDbContext<SqlStateContext>(o =>
+        {
+            o.UseSqlServer(connectionString);
+        });
+        
+        _services.AddSingleton<IFluentSagaStatePersistence, SqlStatePersistence>();
+        
         return this;
     }
 }

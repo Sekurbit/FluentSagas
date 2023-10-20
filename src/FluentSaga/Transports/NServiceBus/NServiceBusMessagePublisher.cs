@@ -22,7 +22,7 @@ public class NServiceBusMessagePublisher : IFluentMessagePublisher
         
         options.SetHeader("NServiceBus.OriginatingSagaId", sagaId);
         options.SetHeader("NServiceBus.OriginatingSagaType", sagaType.AssemblyQualifiedName);
-
+        
         options.SetMessageId(message.Id);
         options.SetHeader("NServiceBus.CorrelationId", message.CorrelationId);
 
