@@ -4,7 +4,7 @@ namespace FluentSaga.State;
 
 public class SqlStateContext : DbContext
 {
-    public SqlStateContext(DbContextOptions options)
+    public SqlStateContext(DbContextOptions<SqlStateContext> options)
         : base(options)
     {
     }
