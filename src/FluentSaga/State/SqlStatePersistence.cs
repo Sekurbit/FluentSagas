@@ -1,20 +1,24 @@
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FluentSaga.State;
 
 public class SqlStatePersistence : IFluentSagaStatePersistence
 {
-    private readonly SqlStateContext _context;
+    private readonly IServiceProvider _serviceProvider;
 
-    public SqlStatePersistence(SqlStateContext context)
+    public SqlStatePersistence(IServiceProvider serviceProvider)
     {
-        _context = context;
+        _serviceProvider = serviceProvider;
     }
     
     public async Task<TStateType?> LoadAsync<TStateType>(string sagaId) where TStateType : IFluentSagaState
     {
-        var state = await _context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
+        using var scope = _serviceProvider.CreateScope();
+        await using var context = scope.ServiceProvider.GetService<SqlStateContext>();
+        
+        var state = await context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
         if (state == null) return default;
         
         return JsonSerializer.Deserialize<TStateType>(state.State);
@@ -22,7 +26,10 @@ public class SqlStatePersistence : IFluentSagaStatePersistence
 
     public async Task<object?> LoadAsync(Type sagaStateType, string sagaId)
     {
-        var state = await _context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
+        using var scope = _serviceProvider.CreateScope();
+        await using var context = scope.ServiceProvider.GetService<SqlStateContext>();
+        
+        var state = await context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
         if (state == null) return default;
         
         return JsonSerializer.Deserialize<dynamic>(state.State);
@@ -30,12 +37,15 @@ public class SqlStatePersistence : IFluentSagaStatePersistence
 
     public async Task SaveAsync(string sagaId, object state)
     {
+        using var scope = _serviceProvider.CreateScope();
+        await using var context = scope.ServiceProvider.GetService<SqlStateContext>();
+        
         var stateJson = JsonSerializer.Serialize(state);
 
-        var existing = await _context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
+        var existing = await context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
         if (existing == null)
         {
-            _context.States.Add(new SqlSagaState
+            context.States.Add(new SqlSagaState
             {
                 State = stateJson,
                 SagaId = sagaId
@@ -46,15 +56,18 @@ public class SqlStatePersistence : IFluentSagaStatePersistence
             existing.State = stateJson;
         }
 
-        await _context.SaveChangesAsync();
+        await context.SaveChangesAsync();
     }
 
     public async Task CompleteAsync(string sagaId)
     {
-        var existing = await _context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
+        using var scope = _serviceProvider.CreateScope();
+        await using var context = scope.ServiceProvider.GetService<SqlStateContext>();
+        
+        var existing = await context.States.FirstOrDefaultAsync(x => x.SagaId.Equals(sagaId));
         if (existing == null) return;
         
-        _context.States.Remove(existing);
-        await _context.SaveChangesAsync();
+        context.States.Remove(existing);
+        await context.SaveChangesAsync();
     }
 }

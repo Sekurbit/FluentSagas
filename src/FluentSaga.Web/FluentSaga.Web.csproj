@@ -9,7 +9,7 @@
         <Authors>Sekurbit Sverige AB</Authors>
         <Description>Beautiful and easy to read implementation of saga pattern</Description>
         <Copyright>(C) 2023 Sekurbit Sverige AB</Copyright>
-        <Version>0.0.21</Version>
+        <Version>0.0.23</Version>
         <PackageProjectUrl>https://github.com/Sekurbit/FluentSagas</PackageProjectUrl>
         <RepositoryUrl>https://github.com/Sekurbit/FluentSagas</RepositoryUrl>
     </PropertyGroup>
